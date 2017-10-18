@@ -3,8 +3,14 @@ var router  = express.Router();
 var Campground = require("../models/campground");
 var Comment = require("../models/comment");
 var middleware = require("../middleware");
-var geocoder = require('geocoder');
-var { isLoggedIn, checkUserCampground, checkUserComment, isAdmin, isSafe } = middleware; // destructuring assignment
+// require and configure node-geocoder
+const NodeGeocoder = require('node-geocoder');
+const options = {
+  provider: 'google'
+};
+const geocoder = NodeGeocoder(options);
+const { isLoggedIn, checkUserCampground, checkUserComment, isAdmin, isSafe } = middleware; // destructuring assignment
+const { cloudinary, upload } = require('../middleware/cloudinary');
 
 // Define escapeRegex function for search feature
 function escapeRegex(text) {
@@ -40,32 +46,46 @@ router.get("/", function(req, res){
 });
 
 //CREATE - add new campground to DB
-router.post("/", isLoggedIn, isSafe, function(req, res){
-  // get data from form and add to campgrounds array
-  var name = req.body.name;
-  var image = req.body.image;
-  var desc = req.body.description;
-  var author = {
-      id: req.user._id,
-      username: req.user.username
+router.post("/", isLoggedIn, upload.single('image'), async (req, res) => {
+  // check if file uploaded otherwise redirect back and flash an error message
+  if(!req.file) {
+    req.flash('error', 'Please upload an image.');
+    return res.redirect('back');
   }
-  var cost = req.body.cost;
-  geocoder.geocode(req.body.location, function (err, data) {
-    var lat = data.results[0].geometry.location.lat;
-    var lng = data.results[0].geometry.location.lng;
-    var location = data.results[0].formatted_address;
-    var newCampground = {name: name, image: image, description: desc, cost: cost, author:author, location: location, lat: lat, lng: lng};
-    // Create a new campground and save to DB
-    Campground.create(newCampground, function(err, newlyCreated){
-        if(err){
-            console.log(err);
-        } else {
-            //redirect back to campgrounds page
-            console.log(newlyCreated);
-            res.redirect("/campgrounds");
-        }
-    });
-  });
+  // try/catch for async + await code
+  try {
+      // get data from form and add to campgrounds array
+      let name = req.body.name;
+      let desc = req.body.description;
+      let author = {
+          id: req.user._id,
+          username: req.user.username
+      }
+      let cost = req.body.cost;
+      // upload image to cloudinary and set resulting url to image variable
+      let result = await cloudinary.uploader.upload(req.file.path);
+      let image = result.secure_url;
+      // get map coordinates for location and assign to lat and lng variables
+      let geoLocation = await geocoder.geocode(req.body.location);
+      let location = geoLocation[0].formattedAddress;
+      let lat = geoLocation[0].latitude;
+      let lng = geoLocation[0].longitude; 
+      // build the newCampground object
+      let newCampground = {
+        name: name,
+        image: image,
+        description: desc,
+        cost: cost,
+        author: author,
+        location: location,
+        lat: lat,
+        lng: lng
+      };
+      await Campground.create(newCampground);
+  } catch (err) {
+      req.flash('error', err.message);
+  }
+  res.redirect('/campgrounds');
 });
 
 //NEW - show form to create new campground

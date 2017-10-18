@@ -81,6 +81,7 @@ router.post("/", isLoggedIn, upload.single('image'), async (req, res) => {
         lat: lat,
         lng: lng
       };
+      // create campground
       await Campground.create(newCampground);
   } catch (err) {
       req.flash('error', err.message);

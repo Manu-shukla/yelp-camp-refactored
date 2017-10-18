@@ -39,6 +39,7 @@ CLOUDINARY_API_SECRET=<api-secret-here>
 - Save the .env file
 
 ## Configure multer and cloudinary
+- Open the terminal and run the following from the root directory of your application: `npm i -S multer && npm i -S cloudinary`
 - Create a new directory named `uploads` inside of `/public`, so the structure looks like this: `/public/uploads`
 - Create a file inside your `/middleware` directory named `cloudinary.js` and enter the following code into it then save the file:
 
@@ -64,7 +65,7 @@ const upload = multer({ storage : storage, fileFilter: imageFilter})
 
 const cloudinary = require('cloudinary');
 cloudinary.config({ 
-  cloud_name: 'learntocodeinfo', 
+  cloud_name: '<your-cloudname-here>', 
   api_key: process.env.CLOUDINARY_API_KEY, 
   api_secret: process.env.CLOUDINARY_API_SECRET
 });
@@ -95,7 +96,7 @@ Finally, we exported the now configured cloudinary and upload variables so they 
 
 ## Adding cloudinary to our routes
 
-- Open `/routes/campgrounds.js` and add this line of code to the top of the file where your other npm packages are being required and save the file: `var { cloudinary, upload } = require('../middleware/cloudinary');`
+- Open `/routes/campgrounds.js` and add this line of code to the top of the file where your other npm packages are being required and save the file: `const { cloudinary, upload } = require('../middleware/cloudinary');`
 	- Note: if this syntax is new to you then take a minute after this tutorial to learn about [destructuring assignment](https://www.youtube.com/watch?v=PB_d3uBkQPs)
 - Replace `var geocoder = require('geocoder');` in /routes/campgrounds.js with: 
 
@@ -110,7 +111,7 @@ const geocoder = NodeGeocoder(options);
 
 - From the project's root directory in the terminal run `npm i -S node-geocoder && npm uninstall geocoder`
 	- Note: We're replacing the geocoder package that I used in my Google maps tutorial with another one that allows us to use async + await, if you don't know what async + await is then take a moment to watch [this tutorial](https://www.youtube.com/watch?v=568g8hxJJp4)
-- If you've been following along with all of my tutorial then your /campgrounds POST route code will look something like this:
+- If you've been following along with all of my tutorials then your /campgrounds POST route code will look something like this:
 
 ```JS
 //CREATE - add new campground to DB
@@ -184,6 +185,7 @@ router.post("/", isLoggedIn, upload.single('image'), async (req, res) => {
         lat: lat,
         lng: lng
       };
+      // create campground
       await Campground.create(newCampground);
   } catch (err) {
       req.flash('error', err.message);
@@ -193,7 +195,7 @@ router.post("/", isLoggedIn, upload.single('image'), async (req, res) => {
 ```
 
 ## Update the view
-- Open /views/campgrounds/new.ejs inside of your code editor
+- Open `/views/campgrounds/new.ejs` inside of your code editor
 - Change: `<form action="/campgrounds" method="POST">` to: `<form action="/campgrounds" method="POST" enctype="multipart/form-data">`
 	- This allows us to upload a file/image with the form
 - Replace the following:
@@ -201,20 +203,20 @@ router.post("/", isLoggedIn, upload.single('image'), async (req, res) => {
 
 ```HTML
 <div class="form-group">
-	<label for="image">Image Url</label>
-	<input class="form-control" type="file" name="image" id="image" pattern="^https:\/\/images\.unsplash\.com\/.*" title="Only images from images.unsplash.com allowed. See link below for instructions." placeholder="https://images.unsplash.com/..." required>
+  <label for="image">Image Url</label>
+  <input class="form-control" type="file" name="image" id="image" pattern="^https:\/\/images\.unsplash\.com\/.*" title="Only images from images.unsplash.com allowed. See link below for instructions." placeholder="https://images.unsplash.com/..." required>
 </div>
 ```
 
 with:
  
  
- ```HTML
- <div class="form-group">
+```HTML
+<div class="form-group">
   <label for="image">Image</label>
   <input type="file" id="image" name="image" accept="image/*" required>
 </div>
- ```
+```
  - Be sure to save the new.ejs file
  
  

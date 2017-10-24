@@ -3,6 +3,8 @@
 ### Refactored by Ian Schoonover
 
 ## Image Upload Instructions
+Note: Before you get started it may be a good idea to use git to checkout a new branch to add this feature on. If you don't know how to use git then use [this free coupon](https://www.udemy.com/intro-to-git/?couponCode=WDBCLASS) to take my git course.
+You'll need to use `git checkout -b image-upload` to create a new branch, then once you're done adding the feature, if it works properly, go back to master and merge the branches with `git checkout master` and `git merge image-upload`
 
 ## Update node
 This tutorial will be using newer syntax from the lastest versions of ECMAScript. I'll be linking to various YouTube tutorials throughout this document to better help you learn the syntax if you haven't seen or used it prior. 
